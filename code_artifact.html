@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>טופס רכישת ציוד משרדי</title>
+    <!-- טעינת העיצוב (Tailwind CSS) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- טעינת האייקונים (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f0f4f8; }
+        /* עיצוב נוסף כדי להסתיר את חצי המספרים בשדות הקלט */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4 sm:px-6 lg:px-8 pb-32">
+
+    <!-- אזור הטופס הראשי -->
+    <div id="form-screen" class="max-w-2xl mx-auto space-y-6">
+        
+        <!-- כותרת -->
+        <div class="bg-white rounded-2xl shadow-sm border-t-8 border-blue-600 p-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">תשלום על ציוד משרדי 📚</h1>
+            <p class="text-gray-600">
+                לקחתם ציוד מהארון? אנא מלאו את הטופס, בחרו את הפריטים שלקחתם והעבירו תשלום בהתאם. תודה!
+            </p>
+        </div>
+
+        <form id="main-form" class="space-y-6">
+            <!-- פרטים אישיים -->
+            <div class="bg-white rounded-2xl shadow-sm p-6 sm:p-8 space-y-6">
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2 border-b pb-4">
+                    <i data-lucide="user" class="w-5 h-5 text-blue-600"></i>
+                    פרטים אישיים
+                </h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">שם מלא <span class="text-red-500">*</span></label>
+                        <input type="text" id="fullName" required placeholder="ישראל ישראלי" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 hover:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">כתובת אימייל <span class="text-red-500">*</span></label>
+                        <input type="email" id="email" required placeholder="student@example.com" dir="ltr" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 hover:bg-white text-left">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">שנה בלימודים <span class="text-red-500">*</span></label>
+                        <select id="year" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 hover:bg-white">
+                            <option value="" disabled selected>בחרו שנה...</option>
+                            <!-- האפשרויות יטענו דרך ה-JS -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- בחירת ציוד -->
+            <div class="bg-white rounded-2xl shadow-sm p-6 sm:p-8 space-y-6">
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center gap-2 border-b pb-4">
+                    <i data-lucide="package" class="w-5 h-5 text-blue-600"></i>
+                    איזה ציוד לקחת? <span class="text-red-500 text-sm">*</span>
+                </h2>
+
+                <div id="items-container" class="space-y-4">
+                    <!-- השורות יתווספו לכאן אוטומטית ע"י JS -->
+                </div>
+
+                <button type="button" onclick="addItemRow()" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    הוסף פריט נוסף
+                </button>
+            </div>
+
+            <!-- סיכום ותשלום -->
+            <div class="bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-8 text-white fixed sm:sticky bottom-0 left-0 w-full sm:bottom-4 sm:w-auto z-10 mx-auto max-w-2xl sm:mb-4">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <div class="bg-gray-700 p-3 rounded-xl hidden sm:block">
+                            <i data-lucide="receipt" class="w-6 h-6 text-blue-400"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">המחיר המלא לתשלום</p>
+                            <p class="text-3xl font-bold"><span id="total-display">0</span> <span class="text-lg font-normal">₪</span></p>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="submit-btn" disabled class="w-full sm:w-auto bg-blue-500 hover:bg-blue-400 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium py-3 px-8 rounded-xl transition-colors text-lg shadow-lg">
+                        סיום וקבלת קישור לתשלום
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- מסך הצלחה (מוסתר כברירת מחדל) -->
+    <div id="success-screen" class="hidden max-w-md mx-auto mt-12 bg-white rounded-2xl shadow-xl w-full p-8 text-center space-y-6">
+        <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <i data-lucide="check-circle" class="w-8 h-8 text-green-600"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800">הפרטים נקלטו בהצלחה!</h2>
+        <p class="text-gray-500 text-sm">אנא עברו כעת לתשלום המאובטח.</p>
+        
+        <div class="bg-gray-50 rounded-lg p-6 text-right space-y-3 border border-gray-100">
+            <p class="text-gray-600"><span class="font-semibold text-gray-800">שם:</span> <span id="summary-name"></span></p>
+            <p class="text-gray-600"><span class="font-semibold text-gray-800">דוא״ל:</span> <span id="summary-email"></span></p>
+            <div class="border-t border-gray-200 pt-3 mt-3">
+                <p class="text-lg font-bold text-gray-800 flex justify-between items-center">
+                    <span>סה״כ לתשלום:</span>
+                    <span class="text-blue-600"><span id="summary-total"></span> ₪</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="space-y-3 pt-4">
+            <a href="https://links.payboxapp.com/oucVE5MW12b" target="_blank" class="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-colors">
+                <i data-lucide="credit-card" class="w-5 h-5"></i>
+                מעבר לתשלום בפייבוקס (<span id="btn-total"></span> ₪)
+            </a>
+            
+            <button type="button" onclick="location.reload()" class="w-full text-gray-500 hover:text-gray-700 font-medium py-2 transition-colors">
+                מילוי טופס חדש
+            </button>
+        </div>
+    </div>
+
+    <!-- לוגיקה (JavaScript) -->
+    <script>
+        // --- נתונים ---
+        const INVENTORY = [
+            { id: '1', name: 'עט מחק', price: 9.3 },
+            { id: '2', name: 'מחק פחם', price: 6 },
+            { id: '3', name: 'מילוי מחק', price: 1.9 },
+            { id: '4', name: 'גיליון סקיצה', price: 3 },
+            { id: '5', name: 'גיליון לבן', price: 2.8 },
+            { id: '6', name: 'דבק סקוטש', price: 6.4 },
+            { id: '7', name: 'קרטון ביצוע', price: 6 },
+            { id: '8', name: 'קרטון חום', price: 4.3 },
+            { id: '9', name: 'דבק מסקנטייפ', price: 4 },
+            { id: '10', name: 'תיקיות חומות', price: 6.5 },
+            { id: '11', name: 'מחברת a3 סקיצה', price: 25 },
+            { id: 'other', name: 'אחר (הזן מחיר ידנית)', price: 0 }
+        ];
+        const STUDY_YEARS = ['שנה א׳', 'שנה ב׳', 'שנה ג׳', 'שנה ד׳', 'שנה ה׳', 'תואר שני', 'אחר'];
+
+        // --- מצב האפליקציה (State) ---
+        let itemsState = [];
+        let totalAmount = 0;
+
+        // --- פונקציות אתחול ---
+        function init() {
+            // אתחול האייקונים
+            lucide.createIcons();
+
+            // טעינת שנות הלימוד לתיבת הבחירה
+            const yearSelect = document.getElementById('year');
+            STUDY_YEARS.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            });
+
+            // הוספת השורה הראשונה הריקה
+            addItemRow();
+
+            // מאזין לשליחת הטופס
+            document.getElementById('main-form').addEventListener('submit', handleSubmit);
+        }
+
+        // --- פעולות על רשימת הציוד ---
+        function addItemRow() {
+            const rowId = Date.now().toString();
+            itemsState.push({ rowId, itemId: '', quantity: 1, customPrice: '', isCustomQuantity: false });
+            renderRows();
+        }
+
+        function removeItemRow(rowId) {
+            if (itemsState.length > 1) {
+                itemsState = itemsState.filter(item => item.rowId !== rowId);
+            } else {
+                // אם זו השורה האחרונה, מאפסים אותה במקום למחוק
+                itemsState = [{ rowId: Date.now().toString(), itemId: '', quantity: 1, customPrice: '', isCustomQuantity: false }];
+            }
+            renderRows();
+        }
+
+        function updateItem(rowId, field, value) {
+            const item = itemsState.find(i => i.rowId === rowId);
+            if (item) {
+                item[field] = value;
+                
+                // איפוס כמות ובחירה אם מחליפים מוצר
+                if (field === 'itemId') {
+                    item.quantity = 1;
+                    item.isCustomQuantity = false;
+                }
+            }
+            
+            // אנחנו קוראים לרינדור מלא רק אם מבנה השורה צריך להשתנות 
+            // (למשל בחרו "אחר" וצריך להציג שדה מחיר, או "כמות מותאמת")
+            if (field === 'itemId' || field === 'isCustomQuantity') {
+                renderRows();
+            } else {
+                calculateTotal(); // אם רק שינו ערך מספרי, רק נעדכן את הסכום
+            }
+        }
+
+        // --- רינדור (בניית ה-HTML של השורות) ---
+        function renderRows() {
+            const container = document.getElementById('items-container');
+            container.innerHTML = ''; // מחיקת השורות הקודמות
+
+            // יצירת אפשרויות המוצרים מראש
+            const inventoryOptions = `<option value="">בחרו ציוד משרדי...</option>` + 
+                INVENTORY.map(p => `<option value="${p.id}">${p.id === 'other' ? p.name : p.name + ' (' + p.price + ' ₪)'}</option>`).join('');
+
+            // יצירת אפשרויות הכמות (1-10)
+            const quantityOptions = [1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${n}</option>`).join('') + `<option value="custom">הזן ידנית...</option>`;
+
+            itemsState.forEach((item, index) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = "flex flex-col sm:flex-row gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100";
+                
+                // --- 1. בחירת מוצר ---
+                let html = `
+                    <div class="flex-1">
+                        <label class="block text-xs text-gray-500 mb-1">פריט</label>
+                        <select onchange="updateItem('${item.rowId}', 'itemId', this.value)" ${index === 0 ? 'required' : ''} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                            ${inventoryOptions}
+                        </select>
+                    </div>
+                `;
+
+                // --- 2. שדה מחיר מותאם (רק אם נבחר "אחר") ---
+                if (item.itemId === 'other') {
+                    html += `
+                        <div class="w-full sm:w-24">
+                            <label class="block text-xs text-gray-500 mb-1">מחיר ליחידה</label>
+                            <input type="number" min="0" step="0.01" value="${item.customPrice}" oninput="updateItem('${item.rowId}', 'customPrice', this.value)" placeholder="0.00" dir="ltr" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-left">
+                        </div>
+                    `;
+                }
+
+                // --- 3. בחירת/הזנת כמות ---
+                html += `<div class="w-full sm:w-24"><label class="block text-xs text-gray-500 mb-1">כמות</label>`;
+                if (!item.isCustomQuantity) {
+                    html += `
+                        <select onchange="if(this.value === 'custom') { updateItem('${item.rowId}', 'isCustomQuantity', true); updateItem('${item.rowId}', 'quantity', 11); } else { updateItem('${item.rowId}', 'quantity', parseInt(this.value)); }" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                            ${quantityOptions}
+                        </select>
+                    `;
+                } else {
+                    html += `
+                        <input type="number" min="1" value="${item.quantity}" oninput="updateItem('${item.rowId}', 'quantity', parseInt(this.value) || 0)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white auto-focus-qty">
+                    `;
+                }
+                html += `</div>`;
+
+                // --- 4. כפתור מחיקה ---
+                html += `
+                    <div class="flex items-end sm:pb-1">
+                        <button type="button" onclick="removeItemRow('${item.rowId}')" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                `;
+
+                rowDiv.innerHTML = html;
+                
+                // קביעת הערכים הנוכחיים לשדות לאחר שיצרנו את ה-HTML
+                const selects = rowDiv.querySelectorAll('select');
+                if (selects[0]) selects[0].value = item.itemId; // מוצר
+                if (selects[1] && !item.isCustomQuantity) selects[1].value = item.quantity; // כמות
+
+                container.appendChild(rowDiv);
+            });
+
+            // ריענון אייקונים בתוך השורות החדשות
+            lucide.createIcons();
+            
+            // עדכון חישוב הסכום
+            calculateTotal();
+
+            // מיקוד אוטומטי אם עברנו לשדה כמות ידני
+            const autoFocusInput = container.querySelector('.auto-focus-qty');
+            if (autoFocusInput) autoFocusInput.focus();
+        }
+
+        // --- חישובים ---
+        function calculateTotal() {
+            totalAmount = 0;
+            
+            itemsState.forEach(item => {
+                if (item.itemId === 'other') {
+                    const price = parseFloat(item.customPrice) || 0;
+                    totalAmount += price * item.quantity;
+                } else if (item.itemId) {
+                    const product = INVENTORY.find(p => p.id === item.itemId);
+                    if (product) {
+                        totalAmount += product.price * item.quantity;
+                    }
+                }
+            });
+
+            // עיגול כדי למנוע בעיות של שברים עשרוניים (למשל 1.90000002)
+            totalAmount = Number(totalAmount.toFixed(2));
+
+            // עדכון התצוגה והכפתור
+            document.getElementById('total-display').textContent = totalAmount;
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = totalAmount === 0;
+        }
+
+        // --- סיום ושליחה ---
+        function handleSubmit(e) {
+            e.preventDefault();
+
+            // אימות
+            const hasValidItems = itemsState.some(item => item.itemId !== '');
+            if (!hasValidItems) {
+                alert('נא לבחור לפחות פריט ציוד אחד מהרשימה.');
+                return;
+            }
+
+            // איסוף נתונים (רק לתצוגה במסך ההצלחה)
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+
+            // עדכון מסך ההצלחה
+            document.getElementById('summary-name').textContent = fullName;
+            document.getElementById('summary-email').textContent = email;
+            document.getElementById('summary-total').textContent = totalAmount;
+            document.getElementById('btn-total').textContent = totalAmount;
+
+            // החלפת מסכים
+            document.getElementById('form-screen').classList.add('hidden');
+            document.getElementById('success-screen').classList.remove('hidden');
+            window.scrollTo(0, 0); // קפיצה לראש הדף
+        }
+
+        // הפעלת האפליקציה בטעינת הדף
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
